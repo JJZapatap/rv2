@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>VR Solar System - Avatar Guide</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
+  </head>
+  <body>
+    <a-scene renderer="antialias: true; colorManagement: true;">
+      
+      <a-assets>
+        <!-- Texturas -->
+        <img id="space" src="https://cdn.glitch.global/ee037e0e-8531-419a-9e79-502a5105232a/stars.jpg?v=1675710000000">
+        <img id="sun_tex" src="https://cdn.glitch.global/ee037e0e-8531-419a-9e79-502a5105232a/sun.jpg?v=1675710000000">
+        <!-- Modelo 3D del Avatar (Robot amigable) -->
+        <a-asset-item id="avatarModel" src="https://cdn.aframe.io/test-models/models/glTF-2.0/virtualcity/VC.gltf"></a-asset-item>
+      </a-assets>
+
+      <!-- CAMARA Y CURSOR -->
+      <a-entity camera look-controls position="0 1.6 5">
+        <a-entity cursor="fuse: true; fuseTimeout: 1500"
+                  position="0 0 -1"
+                  geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+                  material="color: #00ffff; shader: flat"
+                  animation__fusing="property: scale; startEvents: fusing; dur: 1500; from: 1 1 1; to: 0.1 0.1 0.1"
+                  animation__mouseleave="property: scale; startEvents: mouseleave; dur: 500; to: 1 1 1">
+        </a-entity>
+      </a-entity>
+
+      <a-sky src="#space"></a-sky>
+
+      <!-- EL SOL -->
+      <a-sphere src="#sun_tex" position="0 0 -15" radius="5" animation="property: rotation; to: 0 360 0; loop: true; dur: 50000"></a-sphere>
+
+      <!-- EL AVATAR (GUÍA) -->
+      <a-entity position="-2 0 2" rotation="0 45 0">
+        <!-- Cuerpo del avatar (simplificado con un modelo o formas) -->
+        <a-gltf-model src="#avatarModel" scale="0.5 0.5 0.5" position="0 0 0"></a-gltf-model>
+        <a-text value="HOLA, SOY TU GUIA\n(Mirame para preguntar)" align="center" position="0 2.5 0" color="#00ffff" width="4"></a-text>
+        
+        <!-- PANEL DE PREGUNTAS (Botones flotantes) -->
+        <a-entity position="1.5 1.5 0.5">
+            <!-- Pregunta 1 -->
+            <a-box color="#444" width="2" height="0.5" depth="0.1" position="0 0.6 0" 
+                   class="interactable"
+                   onclick="responder('sol')"
+                   event-set__enter="_event: mouseenter; color: #00ff00"
+                   event-set__leave="_event: mouseleave; color: #444">
+                <a-text value="¿Que es el Sol?" align="center" width="3" position="0 0 0.1"></a-text>
+            </a-box>
+
+            <!-- Pregunta 2 -->
+            <a-box color="#444" width="2" height="0.5" depth="0.1" position="0 0 0" 
+                   class="interactable"
+                   onclick="responder('vida')"
+                   event-set__enter="_event: mouseenter; color: #00ff00"
+                   event-set__leave="_event: mouseleave; color: #444">
+                <a-text value="¿Hay vida alli?" align="center" width="3" position="0 0 0.1"></a-text>
+            </a-box>
+
+            <!-- Pregunta 3 -->
+            <a-box color="#444" width="2" height="0.5" depth="0.1" position="0 -0.6 0" 
+                   class="interactable"
+                   onclick="responder('quien')"
+                   event-set__enter="_event: mouseenter; color: #00ff00"
+                   event-set__leave="_event: mouseleave; color: #444">
+                <a-text value="¿Quien eres?" align="center" width="3" position="0 0 0.1"></a-text>
+            </a-box>
+        </a-entity>
+      </a-entity>
+
+      <!-- TEXTO DE RESPUESTA DEL AVATAR -->
+      <a-entity id="balloon" position="-0.5 3 1" visible="false">
+        <a-plane color="white" width="3" height="1"></a-plane>
+        <a-text id="replyText" value="..." color="black" align="center" width="2.8" position="0 0 0.1"></a-text>
+      </a-entity>
+
+    </a-scene>
+
+    <script>
+      // Diccionario de respuestas
+      const respuestas = {
+        sol: "El Sol es una estrella de tipo G. Es el centro de nuestro sistema y nos da luz y calor.",
+        vida: "Por ahora solo conocemos vida en la Tierra, pero estamos explorando Marte y las lunas de Jupiter.",
+        quien: "Soy tu asistente virtual de exploracion espacial. Estoy aqui para ayudarte a conocer el cosmos."
+      };
+
+      function responder(tipo) {
+        const mensaje = respuestas[tipo];
+        const balloon = document.querySelector('#balloon');
+        const replyText = document.querySelector('#replyText');
+        
+        // 1. Mostrar texto en pantalla
+        replyText.setAttribute('value', mensaje);
+        balloon.setAttribute('visible', 'true');
+
+        // 2. Voz (Text to Speech)
+        const synth = window.speechSynthesis;
+        const utterThis = new SpeechSynthesisUtterance(mensaje);
+        utterThis.lang = 'es-ES'; // Configurar voz en español
+        utterThis.pitch = 1.2;    // Voz un poco mas robotica/aguda
+        synth.speak(utterThis);
+
+        // Ocultar globo despues de 5 segundos
+        setTimeout(() => { balloon.setAttribute('visible', 'false'); }, 7000);
+      }
+
+      // Permisos para iOS/Android para que la voz funcione tras el primer click
+      document.body.addEventListener('click', function() {
+          if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+              DeviceOrientationEvent.requestPermission();
+          }
+      }, {once: true});
+    </script>
+  </body>
+</html>
